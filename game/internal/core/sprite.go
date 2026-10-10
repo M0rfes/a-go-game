@@ -7,11 +7,13 @@ import (
 type Sprite struct {
 	Node2D
 	texture *ebiten.Image
-	layer   int
+	layer   uint
 	visible bool
 }
 
-func NewSprite(name string, texture *ebiten.Image, layer int, centerPivot bool) *Sprite {
+var _ Drawable = (*Sprite)(nil)
+
+func NewSprite(name string, texture *ebiten.Image, layer uint, centerPivot bool) *Sprite {
 	s := &Sprite{
 		Node2D:  *NewNode2D(name),
 		texture: texture,
@@ -40,11 +42,11 @@ func (s *Sprite) SetTexture(texture *ebiten.Image) {
 	s.texture = texture
 }
 
-func (s *Sprite) GetLayer() int {
+func (s *Sprite) GetLayer() uint {
 	return s.layer
 }
 
-func (s *Sprite) SetLayer(layer int) {
+func (s *Sprite) SetLayer(layer uint) {
 	s.layer = layer
 }
 

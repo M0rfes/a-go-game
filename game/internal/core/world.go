@@ -1,19 +1,26 @@
 package core
 
 import (
+	"sort"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+const DefaultLayerIndex = 0
+
 type World struct {
-	rootScene SceneNode
+	rootScene  SceneNode
+	layerRoots []SceneNode
+	drawLayers *Layers
+	drawTarget *ebiten.Image
 }
 
-func NewWorld() *World {
-	return &World{rootScene: NewNode("root")}
+func NewWorld(w, h uint) *World {
+	return &World{rootScene: NewNode("root"), layerRoots: make([]SceneNode, 0), drawLayers: NewLayer()}
 }
 
 func (world *World) AddNodeToDefaultLayer(node SceneNode) {
-	world.rootScene.AddChild(node)
+	world.AddNodeToLayer(node, DefaultLayerIndex)
 }
 
 func (world *World) Update() {
@@ -30,22 +37,42 @@ func (world *World) updateNode(node SceneNode) {
 }
 
 func (world *World) Draw(target *ebiten.Image) {
-	world.drawNodes(world.rootScene, ebiten.GeoM{}, target)
+	world.drawTarget = target
+	for i := range world.layerRoots {
+		world.drawNodes(world.layerRoots[i], uint(i))
+	}
+	world.drawLayers.DrawAll()
 }
 
-func (world *World) drawNodes(node SceneNode, parentGeoM ebiten.GeoM, target *ebiten.Image) {
+func (world *World) drawNodes(node SceneNode, layerIndex uint) {
 	if node == nil {
 		return
 	}
+	childrens := node.GetChildren()
+	sort.Slice(childrens, func(i, j int) bool {
+		li, lj := 0, 0
+		if d, ok := childrens[i].(Drawable); ok {
+			li = int(d.GetLayer())
+		}
 
-	if drawable, ok := node.(Drawable); ok {
+		if d, ok := childrens[j].(Drawable); ok {
+			lj = int(d.GetLayer())
+		}
+		return li > lj
+	})
+
+	for _, child := range childrens {
+		world.drawNodes(child, layerIndex)
+	}
+
+	if d, ok := node.(Drawable); ok {
 		op := &ebiten.DrawImageOptions{}
-		op.GeoM = buildGeoMFromTransform(drawable.GetWorldTransform())
-		drawable.Draw(target, op)
+		if t, ok := node.(Transformable); ok {
+			op.GeoM = buildGeoMFromTransform(t.GetWorldTransform())
+		}
+		world.drawLayers.AddNode(layerIndex, d, world.drawTarget, op)
 	}
-	for _, child := range node.GetChildren() {
-		world.drawNodes(child, parentGeoM, target)
-	}
+
 }
 
 func (world *World) RemoveNode(node SceneNode) bool {
@@ -75,4 +102,17 @@ func buildGeoMFromTransform(t Transform) ebiten.GeoM {
 	g.Translate(position.X(), position.Y())
 
 	return g
+}
+
+func (world *World) getLayer(layerIndex uint) SceneNode {
+	for layerIndex >= uint(len(world.layerRoots)) {
+		root := NewNode("layer_root")
+		world.layerRoots = append(world.layerRoots, root)
+		world.rootScene.AddChild(root)
+	}
+	return world.layerRoots[layerIndex]
+}
+
+func (world *World) AddNodeToLayer(node SceneNode, layerIndex uint) {
+	world.getLayer(layerIndex).AddChild(node)
 }

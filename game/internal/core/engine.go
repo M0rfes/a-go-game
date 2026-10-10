@@ -1,13 +1,17 @@
 package core
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+const floorLayerIndex uint = 0
 
 type Engine struct {
 	world *World
 }
 
 func NewEngine() *Engine {
-	return &Engine{world: NewWorld()}
+	return &Engine{world: NewWorld(uint(Settings.ScreenWidth), uint(Settings.ScreenHeight))}
 }
 
 func (engine *Engine) World() *World {

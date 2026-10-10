@@ -3,13 +3,18 @@ package assets
 import (
 	"embed"
 	"io/fs"
+
+	"bytes"
+	"image"
+	_ "image/png"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
-//go:embed hero-sheet.jpg
-//go:embed hero
+//go:embed sprites
 var files embed.FS
 
-var Images = map[string][]byte{}
+var Textures = make(map[string]*ebiten.Image)
 
 func init() {
 	err := fs.WalkDir(files, ".", func(path string, entry fs.DirEntry, err error) error {
@@ -23,7 +28,14 @@ func init() {
 		if err != nil {
 			return err
 		}
-		Images[path] = data
+
+		img, _, err := image.Decode(bytes.NewReader(data))
+		if err != nil {
+			return err
+		}
+		texture := ebiten.NewImageFromImage(img)
+
+		Textures[path] = texture
 		return nil
 	})
 	if err != nil {

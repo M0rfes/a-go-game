@@ -3,21 +3,15 @@ package game
 import (
 	"math"
 
-	"github.com/hajimehoshi/ebiten/v2"
-
-	"bytes"
-	"image"
-	_ "image/png"
-
-	"github.com/M0rfes/a-go-game/assets"
 	"github.com/M0rfes/a-go-game/game/internal/core"
+	"github.com/M0rfes/a-go-game/game/sprites"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const rotationSpeed = 0.02
-
 type Game struct {
-	engine *core.Engine
-	logo   *core.Node2D
+	engine     *core.Engine
+	heroSprite *core.Sprite
+	tick       int
 }
 
 func (game *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, screenHeight int) {
@@ -25,10 +19,16 @@ func (game *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, 
 }
 
 func (game *Game) Update() error {
-	game.logo.SetRotation(game.logo.GetRotation() + rotationSpeed)
-	if game.logo.GetRotation() >= 2*math.Pi {
-		game.logo.SetRotation(0)
-	}
+	game.tick++
+
+	// Classic retro walk-in-place animation (bob up/down + slight side tilt):
+	step := float64(game.tick) * 0.18
+	bob := math.Abs(math.Sin(step)) * 6.0
+	tilt := math.Sin(step) * 0.08
+
+	game.heroSprite.SetPosition(0, -bob)
+	game.heroSprite.SetRotation(tilt)
+
 	return game.engine.Update()
 }
 
@@ -37,22 +37,24 @@ func (game *Game) Draw(screen *ebiten.Image) {
 }
 
 func Run() error {
-	img, _, err := image.Decode(bytes.NewReader(assets.Images["hero/walk/down/00.png"]))
-	if err != nil {
-		return err
-	}
-	texture := ebiten.NewImageFromImage(img)
 	engine := core.NewEngine()
 	world := engine.World()
+	floor := sprites.GetFloorSprite()
 
-	logo := core.NewNode2D("logo")
-	logo.SetPosition(320, 240)
-	sprite := core.NewSprite("hero", texture, 0, true)
-	sprite.SetPosition(0, 0)
-	logo.AddChild(sprite)
-	world.AddNodeToDefaultLayer(logo)
-	ebiten.SetWindowSize(Settings.ScreenWidth, Settings.ScreenHeight)
+	p := core.NewNode2D("player_shell")
+	player := sprites.GetPlayerSprite()
+	p.SetPosition(320, 240)
+	p.AddChild(player)
+
+	world.AddNodeToLayer(floor, sprites.FloorLayer)
+	world.AddNodeToLayer(p, sprites.PlayerLayer)
+
+	ebiten.SetWindowSize(core.Settings.ScreenWidth, core.Settings.ScreenHeight)
 	ebiten.SetWindowTitle("A go game")
-	game := &Game{engine: engine, logo: logo}
+
+	game := &Game{
+		engine:     engine,
+		heroSprite: player,
+	}
 	return ebiten.RunGame(game)
 }
