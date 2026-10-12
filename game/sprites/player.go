@@ -14,13 +14,13 @@ func GetPlayerTexture() *ebiten.Image {
 }
 
 // NewPlayerSprite constructs a configured player sprite.
-func NewPlayerSprite() *core.Sprite {
+func NewPlayerSprite(name string) *core.Sprite {
 	tex := GetPlayerTexture()
-	sprite := core.NewSprite("player", tex, PlayerLayer, true)
+	sprite := core.NewSprite(name, tex, PlayerLayer, true)
 	return sprite
 }
 
 // GetPlayerSprite is a getter that constructs and returns a player sprite.
-func GetPlayerSprite() *core.Sprite {
-	return NewPlayerSprite()
+func GetPlayerSprite(name string) *core.Sprite {
+	return NewPlayerSprite(name)
 }

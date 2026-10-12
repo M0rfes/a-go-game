@@ -8,10 +8,14 @@ const floorLayerIndex uint = 0
 
 type Engine struct {
 	world *World
+	input *InputManager
 }
 
 func NewEngine() *Engine {
-	return &Engine{world: NewWorld(uint(Settings.ScreenWidth), uint(Settings.ScreenHeight))}
+	return &Engine{
+		world: NewWorld(uint(Settings.ScreenWidth), uint(Settings.ScreenHeight)),
+		input: NewInputManager(),
+	}
 }
 
 func (engine *Engine) World() *World {
@@ -19,6 +23,7 @@ func (engine *Engine) World() *World {
 }
 
 func (engine *Engine) Update() error {
+	engine.input.Update()
 	engine.world.Update()
 	return nil
 }
@@ -29,4 +34,8 @@ func (engine *Engine) Draw(target *ebiten.Image) {
 
 func (engine *Engine) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return 640, 480
+}
+
+func (engine *Engine) Input() *InputManager {
+	return engine.input
 }

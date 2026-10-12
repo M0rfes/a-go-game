@@ -14,11 +14,11 @@ func ZeroVectore() Vector2D {
 	return Vector2D{0, 0}
 }
 
-func (vec *Vector2D) X() float64 {
+func (vec Vector2D) X() float64 {
 	return vec.x
 }
 
-func (vec *Vector2D) Y() float64 {
+func (vec Vector2D) Y() float64 {
 	return vec.y
 }
 
