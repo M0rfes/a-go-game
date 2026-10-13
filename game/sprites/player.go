@@ -6,7 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const PlayerLayer uint = 1
+const PlayerLayer uint = 2
 
 // GetPlayerTexture returns the player texture from assets.
 func GetPlayerTexture() *ebiten.Image {

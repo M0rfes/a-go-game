@@ -7,6 +7,7 @@ type settings struct {
 }
 
 var Settings settings
+var FloorTileIndex = [][2]int{{0, 0}, {0, 1}, {0, 2}}
 
 func init() {
 	Settings.ScreenWidth = 640

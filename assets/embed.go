@@ -14,6 +14,9 @@ import (
 //go:embed sprites
 var files embed.FS
 
+//go:embed default.map
+var DefaultMapData []byte
+
 var Textures = make(map[string]*ebiten.Image)
 
 func init() {

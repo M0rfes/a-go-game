@@ -1,6 +1,7 @@
 package core
 
 import (
+	"image/color"
 	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,10 +14,12 @@ type World struct {
 	layerRoots []SceneNode
 	drawLayers *Layers
 	drawTarget *ebiten.Image
+
+	camera *Camera
 }
 
 func NewWorld(w, h uint) *World {
-	return &World{rootScene: NewNode("root"), layerRoots: make([]SceneNode, 0), drawLayers: NewLayer()}
+	return &World{rootScene: NewNode("root"), layerRoots: make([]SceneNode, 0), drawLayers: NewLayer(), camera: NewCamera(w, h)}
 }
 
 func (world *World) AddNodeToDefaultLayer(node SceneNode) {
@@ -24,6 +27,7 @@ func (world *World) AddNodeToDefaultLayer(node SceneNode) {
 }
 
 func (world *World) Update() {
+	world.camera.Update()
 	world.updateNode(world.rootScene)
 }
 
@@ -31,17 +35,27 @@ func (world *World) updateNode(node SceneNode) {
 	if node == nil {
 		return
 	}
+	if u, ok := node.(Updatable); ok {
+		u.Update()
+	}
 	for _, child := range node.GetChildren() {
 		world.updateNode(child)
 	}
 }
 
+func (w *World) prepareDrawSurface() {
+	w.drawTarget = w.camera.GetSurface()
+	w.drawTarget.Fill(color.RGBA{40, 40, 50, 255})
+}
+
 func (world *World) Draw(target *ebiten.Image) {
-	world.drawTarget = target
+	world.prepareDrawSurface()
+
 	for i := range world.layerRoots {
 		world.drawNodes(world.layerRoots[i], uint(i))
 	}
 	world.drawLayers.DrawAll()
+	world.camera.DrawToScreen(target)
 }
 
 func (world *World) drawNodes(node SceneNode, layerIndex uint) {
@@ -70,6 +84,7 @@ func (world *World) drawNodes(node SceneNode, layerIndex uint) {
 		if t, ok := node.(Transformable); ok {
 			op.GeoM = buildGeoMFromTransform(t.GetWorldTransform())
 		}
+		world.camera.ApplyOffset(op)
 		world.drawLayers.AddNode(layerIndex, d, world.drawTarget, op)
 	}
 
@@ -115,4 +130,8 @@ func (world *World) getLayer(layerIndex uint) SceneNode {
 
 func (world *World) AddNodeToLayer(node SceneNode, layerIndex uint) {
 	world.getLayer(layerIndex).AddChild(node)
+}
+
+func (world *World) Camera() *Camera {
+	return world.camera
 }

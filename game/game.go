@@ -3,7 +3,6 @@ package game
 import (
 	"github.com/M0rfes/a-go-game/game/entites"
 	"github.com/M0rfes/a-go-game/game/internal/core"
-	"github.com/M0rfes/a-go-game/game/sprites"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -33,14 +32,13 @@ func Run() error {
 	engine := core.NewEngine()
 	world := engine.World()
 	input := engine.Input()
-	floor := sprites.GetFloorSprite()
 
-	world.AddNodeToLayer(floor, sprites.FloorLayer)
+	entites.NewTileMap(world)
 
 	player := entites.NewPlayer(input, world)
 	ebiten.SetWindowSize(core.Settings.ScreenWidth, core.Settings.ScreenHeight)
 	ebiten.SetWindowTitle("A go game")
-
+	world.Camera().SetFollow(player)
 	game := &Game{
 		engine: engine,
 		player: player,
