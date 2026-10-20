@@ -7,19 +7,25 @@ import (
 const floorLayerIndex uint = 0
 
 type Engine struct {
-	world *World
-	input *InputManager
+	world            *World
+	input            *InputManager
+	collisionManager *CollisionManager
 }
 
 func NewEngine() *Engine {
 	return &Engine{
-		world: NewWorld(uint(Settings.ScreenWidth), uint(Settings.ScreenHeight)),
-		input: NewInputManager(),
+		world:            NewWorld(uint(Settings.ScreenWidth), uint(Settings.ScreenHeight)),
+		input:            NewInputManager(),
+		collisionManager: NewCollisionManager(),
 	}
 }
 
 func (engine *Engine) World() *World {
 	return engine.world
+}
+
+func (engine *Engine) CollisionManager() *CollisionManager {
+	return engine.collisionManager
 }
 
 func (engine *Engine) Update() error {

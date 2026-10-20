@@ -92,3 +92,8 @@ func (node2D *Node2D) GetWorldTransform() Transform {
 	node2D.isDirty = false
 	return world
 }
+
+func (node2d *Node2D) GetWorldPosition() Vector2D {
+	wt := node2d.GetWorldTransform()
+	return wt.GetPosition()
+}

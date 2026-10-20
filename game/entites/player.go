@@ -14,19 +14,39 @@ const (
 	playerSpriteName      = "player_sprite"
 	playerSpriteLayer     = 0
 	playerWorldLayerIndex = 1
+	playerRadius          = 6
 )
 
 type Player struct {
 	*core.Node2D
 	texture *core.Sprite
 	tick    uint
+	events  *PlayerEvents
 }
 
-func NewPlayer(input *core.InputManager, world *core.World) *Player {
+type PlayerEvents struct {
+	OnPlayerDead func()
+}
+
+func NewPlayer(input *core.InputManager, engine *core.Engine, event *PlayerEvents) *Player {
+	world := engine.World()
+	collisionManager := engine.CollisionManager()
+
 	p := core.NewNode2D(playerNodeName)
 	playerSprite := sprites.GetPlayerSprite(playerSpriteName)
 	p.SetPosition(320, 240)
 	p.AddChild(playerSprite)
+
+	shape := core.NewCollisionCircle(playerRadius)
+	mask := core.NewCollisionMask(core.LayerPlayer, core.LayerEnemy)
+	c := collisionManager.NewCollider("player", shape, mask)
+	c.SetPosition(0, 0)
+	p.AddChild(c)
+
+	c.SetOnCollide(func(other *core.Collider) {
+		// end the game for now
+		event.OnPlayerDead()
+	})
 
 	world.AddNodeToLayer(p, playerWorldLayerIndex)
 
@@ -34,6 +54,7 @@ func NewPlayer(input *core.InputManager, world *core.World) *Player {
 		Node2D:  p,
 		texture: playerSprite,
 		tick:    0,
+		events:  event,
 	}
 
 	input.AddAction("move_up", core.NewKeyRawInputButton(ebiten.KeyArrowUp))
